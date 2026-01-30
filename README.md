@@ -3,11 +3,11 @@
 Auto-number headings in Confluence Cloud while editing. This userscript renumbers headings in the editor (no duplicates, full overwrite), provides a small floating `#` button, and works cross-browser (Tampermonkey/Greasemonkey/Violentmonkey).
 
 Files added
- `confluence-numbered-headings.user.js` — the userscript to install.
+`confluence-numbered-headings.user.js` — the userscript to install.
 
 Inspired by earlier community work on Confluence heading numbering, but reimplemented and extended independently.
-   Preferred: open the file `confluence-numbered-headings.user.js` in the browser (or host it somewhere reachable) and click "Install" in your userscript manager.
-   Alternative (local): open your userscript manager dashboard, create a new script, and paste the contents of `confluence-numbered-headings.user.js`.
+Preferred: open the file `confluence-numbered-headings.user.js` in the browser (or host it somewhere reachable) and click "Install" in your userscript manager.
+Alternative (local): open your userscript manager dashboard, create a new script, and paste the contents of `confluence-numbered-headings.user.js`.
 
 1. Install a userscript manager in your browser:
    - Chrome / Edge / Chromium: Tampermonkey (recommended)
@@ -39,6 +39,16 @@ Notes
 
 - The script overwrites heading text nodes (it strips any leading numeric label before reapplying an updated label), so it avoids accumulating duplicate numbers.
 - It detects single-page-app navigation and attaches when you open the editor.
+
+Install (one-click)
+
+- Direct raw install URL (click to install in Greasemonkey/Tampermonkey):
+
+   https://raw.githubusercontent.com/Bruzzlee/ConfluenceNumberedHeadings/main/confluence-numbered-headings.user.js
+
+- GitHub file page (view source on GitHub):
+
+   https://github.com/Bruzzlee/ConfluenceNumberedHeadings/blob/main/confluence-numbered-headings.user.js
 
 Support
 
