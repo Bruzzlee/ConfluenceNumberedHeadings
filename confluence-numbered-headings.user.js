@@ -1,8 +1,9 @@
 // ==UserScript==
-// @name         Confluence Numbered Headings (Edit Mode Only, Cross‑Browser, No Duplication)
-// @namespace    https://gist.github.com/Bruzzlee/4184b98903493226493a211d0444f0a0
+// @name         Confluence Numbered Headings
+// @namespace    https://github.com/Bruzzlee/ConfluenceNumberedHeadings
 // @version      3.1.1
 // @description  Auto-number headings in Confluence Cloud while editing. Full overwrite, no duplicates, Chrome/Firefox compatible. Top-right overlay.
+// @author       Bruzzlee
 // @match        https://*.atlassian.net/wiki/*
 // @grant        none
 // ==/UserScript==
@@ -13,13 +14,13 @@
   /***********************
    * Configuration
    ***********************/
-  const START_LEVEL = 1;    // Start numbering at this heading level (1..6)
-  const INCLUDE_H1  = true; // Include H1 numbering when START_LEVEL=1
-  const SHOW_FLOAT  = true; // Show small floating "#" button
+  const START_LEVEL = 1; // Start numbering at this heading level (1..6)
+  const INCLUDE_H1 = true; // Include H1 numbering when START_LEVEL=1
+  const SHOW_FLOAT = true; // Show small floating "#" button
 
   // New: control the top-right placement (tweak if your toolbar height differs)
-  const TOP_OFFSET   = 88;   // px below the top app/toolbar area
-  const RIGHT_OFFSET = 16;   // px from the right edge
+  const TOP_OFFSET = 88; // px below the top app/toolbar area
+  const RIGHT_OFFSET = 16; // px from the right edge
 
   /***********************
    * Utilities
@@ -33,18 +34,26 @@
 
       const obs = new MutationObserver(() => {
         const el = root.querySelector(selector);
-        if (el) { obs.disconnect(); resolve(el); }
+        if (el) {
+          obs.disconnect();
+          resolve(el);
+        }
       });
       obs.observe(root, { childList: true, subtree: true });
 
-      setTimeout(() => { obs.disconnect(); reject(new Error(`Timeout: ${selector}`)); }, timeout);
+      setTimeout(() => {
+        obs.disconnect();
+        reject(new Error(`Timeout: ${selector}`));
+      }, timeout);
     });
   }
 
   function findEditorRoot() {
     return (
       document.querySelector("div.ProseMirror[contenteditable='true']") ||
-      document.querySelector("[data-testid*='editor'][contenteditable='true']") ||
+      document.querySelector(
+        "[data-testid*='editor'][contenteditable='true']",
+      ) ||
       document.querySelector("[data-editor-root='true']") ||
       null
     );
@@ -64,10 +73,13 @@
     const results = [];
 
     for (const h of headings) {
-      const lvl = Math.max(1, Math.min(6, parseInt(h.tagName.substring(1), 10)));
+      const lvl = Math.max(
+        1,
+        Math.min(6, parseInt(h.tagName.substring(1), 10)),
+      );
       for (let i = lvl; i < 6; i++) counters[i] = 0;
       counters[lvl - 1]++;
-      const parts = counters.slice(START_LEVEL - 1, lvl).filter(n => n > 0);
+      const parts = counters.slice(START_LEVEL - 1, lvl).filter((n) => n > 0);
       results.push({ el: h, label: parts.join(".") + ". " });
     }
     return results;
@@ -88,7 +100,7 @@
   }
 
   function getCleanHeadingText(h) {
-    h.querySelectorAll("span.ProseMirror-widget").forEach(el => el.remove());
+    h.querySelectorAll("span.ProseMirror-widget").forEach((el) => el.remove());
     const br = h.querySelector("br.ProseMirror-trailingBreak");
     if (br) br.remove();
     const raw = (h.textContent || "").trim();
@@ -97,8 +109,8 @@
 
   function renumber(root) {
     const all = getHeadings(root)
-      .filter(h => (INCLUDE_H1 || h.tagName !== "H1"))
-      .filter(h => parseInt(h.tagName.substring(1), 10) >= START_LEVEL);
+      .filter((h) => INCLUDE_H1 || h.tagName !== "H1")
+      .filter((h) => parseInt(h.tagName.substring(1), 10) >= START_LEVEL);
 
     const labels = computeNumberingLabels(all);
 
@@ -117,18 +129,22 @@
   }
 
   function installHotkeys(root) {
-    window.addEventListener("keydown", (e) => {
-      const key = (e.key || "").toLowerCase();
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        const key = (e.key || "").toLowerCase();
 
-      if (e.ctrlKey && e.altKey && !e.shiftKey && key === "n") {
-        e.preventDefault();
-        renumber(root);
-      }
-      if (e.ctrlKey && e.altKey && e.shiftKey && key === "n") {
-        e.preventDefault();
-        removeAllNumbers(root);
-      }
-    }, { capture: true });
+        if (e.ctrlKey && e.altKey && !e.shiftKey && key === "n") {
+          e.preventDefault();
+          renumber(root);
+        }
+        if (e.ctrlKey && e.altKey && e.shiftKey && key === "n") {
+          e.preventDefault();
+          removeAllNumbers(root);
+        }
+      },
+      { capture: true },
+    );
   }
 
   // ************* CHANGED: top-right overlay *************
@@ -155,12 +171,16 @@
         cursor: "pointer",
         fontSize: "18px",
         zIndex: 2147483647, // on top of Confluence overlays
-        transition: "transform 120ms ease"
+        transition: "transform 120ms ease",
       });
 
       btn.title = "Number headings (Ctrl+Alt+N) • Remove (Ctrl+Alt+Shift+N)";
-      btn.addEventListener("mouseenter", () => { btn.style.transform = "scale(1.06)"; });
-      btn.addEventListener("mouseleave", () => { btn.style.transform = "scale(1)"; });
+      btn.addEventListener("mouseenter", () => {
+        btn.style.transform = "scale(1.06)";
+      });
+      btn.addEventListener("mouseleave", () => {
+        btn.style.transform = "scale(1)";
+      });
       btn.addEventListener("click", () => renumber(root));
 
       document.body.appendChild(btn);
@@ -172,14 +192,22 @@
       // If there’s a top global banner, push button slightly further down.
       // Cheap heuristic: look for any fixed element aligned to top:0 with height > 48.
       try {
-        const fixedTopEls = Array.from(document.querySelectorAll("body *"))
-          .filter(n => {
-            const s = getComputedStyle(n);
-            return s.position === "fixed" && s.top === "0px" && n.offsetHeight > 48 && n.offsetWidth > 200;
-          });
+        const fixedTopEls = Array.from(
+          document.querySelectorAll("body *"),
+        ).filter((n) => {
+          const s = getComputedStyle(n);
+          return (
+            s.position === "fixed" &&
+            s.top === "0px" &&
+            n.offsetHeight > 48 &&
+            n.offsetWidth > 200
+          );
+        });
         const extra = fixedTopEls.length ? 12 : 0;
         btn.style.top = `${TOP_OFFSET + extra}px`;
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     };
 
     // Run once and on resize (lightweight)
@@ -197,7 +225,9 @@
   async function boot() {
     if (!isEditUrl()) return;
     try {
-      await waitFor("div.ProseMirror[contenteditable='true'], [data-testid*='editor'][contenteditable='true'], [data-editor-root='true']");
+      await waitFor(
+        "div.ProseMirror[contenteditable='true'], [data-testid*='editor'][contenteditable='true'], [data-editor-root='true']",
+      );
       const root = findEditorRoot();
       if (!root) return;
 
